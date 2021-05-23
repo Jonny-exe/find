@@ -2,7 +2,10 @@
 if ($_GET["find"]) {
   $cookie_name = "find_block_list";
   if ($_GET["block_list"]) {
-    $block_list = $_GET["block_list"];
+    $raw_block_list = $_GET["block_list"];
+    $block_list = str_replace(PHP_EOL, "", $raw_block_list);
+    $block_list = str_replace("\n", "", $block_list);
+    $block_list = str_replace("\r", "", $block_list);
     $set_cookie = True;
     if ($_COOKIE[$cookie_name]) {
       $new_cookie_value = $block_list . " " . $_COOKIE[$cookie_name];

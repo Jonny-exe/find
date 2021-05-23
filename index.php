@@ -1,13 +1,48 @@
 <?php
 
-function clean_block_list($raw_block_list) {
+function clean_block_list($raw_block_list)
+{
   $clean_block_list = str_replace(PHP_EOL, "", $raw_block_list);
-  $clean_block_list = str_replace("\n", "", $clean_block_list );
-  $clean_block_list = str_replace("\r", "", $clean_block_list );
+  $clean_block_list = str_replace("\n", "", $clean_block_list);
+  $clean_block_list = str_replace("\r", "", $clean_block_list);
   return $clean_block_list;
 }
+$cookie_name = "find_block_list";
+
+if (isset($_GET["remove"])) {
+  $site_to_remove = $_GET["remove"];
+  $set_cookie = False;
+  if (isset($_COOKIE["find_block_list"])) {
+    $block_list = $_COOKIE["find_block_list"];
+    $block_list_array = explode(" ", $block_list);
+    for ($i = 0; $i < count($block_list_array); $i = $i + 1) {
+      if ($block_list_array[$i] == $site_to_remove) {
+        unset($block_list_array[$i]);
+      }
+    }
+    $set_cookie = True;
+  }
+
+  if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')
+    $url = "https://";
+  else
+    $url = "http://";
+  // Append the host(domain name, ip) to the URL.   
+  $url .= $_SERVER['HTTP_HOST'];
+
+  // Append the requested resource location to the URL   
+  $url .= $_SERVER['REQUEST_URI'];
+
+  $url = strtok($url, '?');
+
+  header("Location: $url");
+  if ($set_cookie) {
+    setcookie($cookie_name, join(" ", $block_list_array), time() + (86400 * 30), "/"); // 86400 = 1 day
+  }
+  exit;
+}
+
 if (isset($_GET["find"])) {
-  $cookie_name = "find_block_list";
   if (isset($_GET["block_list"]) and $_GET["block_list"] != "") {
     $raw_block_list = $_GET["block_list"];
     $block_list = clean_block_list($raw_block_list);
@@ -35,7 +70,6 @@ if (isset($_GET["find"])) {
   header("Location: https://duckduckgo.com/" . $new_url . " " . $adapted_block_list);
   // header("refresh: 2; https://duckduckgo.com/" . $new_url . " " . $adapted_block_list);
   if ($set_cookie) {
-    print "set cookie";
     setcookie($cookie_name, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
   }
   exit;
@@ -61,7 +95,7 @@ function get_block_list($block_list)
 <head>
   <!-- Latest compiled and minified CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-  <script src="js/index.js" type="module" defer></script>
+  <script src="js/index.js" defer></script>
   <title>Find</title>
 </head>
 
@@ -72,15 +106,15 @@ function get_block_list($block_list)
     <textarea type="text" name="block_list" placeholder="Add to block list" class="form-control" class="block-list"></textarea>
   </form>
   <div id="block-list-wrapper" class="hide">
-    <?php 
-    if (isset($_COOKIE["find_block_list"]))  {
+    <?php
+    if (isset($_COOKIE["find_block_list"])) {
       $block_list = $_COOKIE["find_block_list"];
       $block_list_array = explode(" ", $block_list);
-      echo "<table class='table table-bordered'>";
+      echo "<table class='table table-hover table-bordered'>";
       foreach ($block_list_array as $block_site) {
-        echo "<tr><td>".$block_site."</td></tr>";
+        echo "<tr><td><a title='remove' href='/?remove=$block_site'>" . $block_site . "</a></td></tr>";
       }
-      print "</table>";
+      echo "</table>";
     }
     ?>
   </div>
